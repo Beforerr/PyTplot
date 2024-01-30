@@ -109,3 +109,11 @@ venv.bak/
 
 # Local user dir
 mylocaldir/
+
+# Installation files
+build/
+dist/
+var/
+sdist/
+eggs/
+wheels/

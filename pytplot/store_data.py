@@ -45,11 +45,14 @@ def store_data(name, data=None, delete=False, newname=None, attr_dict={}, xarray
             'x' and 'y' can be any data format that can be read in by the pandas module.  Python lists, numpy arrays,
             or any pandas data type will all work.
         delete : bool, optional
-            Deletes the tplot variable matching the "name" parameter
+            If True, deletes the tplot variable matching the "name" parameter
+            Default: False
         newname: str
-            Renames TVar to new name
+            If set, renames TVar to new name
+            Default: False
         attr_dict: dict
             A dictionary object of attributes (these do not affect routines in pytplot, this is merely to keep metadata alongside the file)
+            Default: {} (empty dictionary)
         
     .. note::
         If you want to combine multiple tplot variables into one, simply supply the list of tplot variables to the
@@ -155,9 +158,16 @@ def store_data(name, data=None, delete=False, newname=None, attr_dict={}, xarray
         elif isinstance(times[0], str):
             times = [parse(time).replace(tzinfo=datetime.timezone.utc).timestamp() for time in times]
 
-    if len(times) != len(values):
-        logging.warning("%s: lengths of x (%d) and y (%d) do not match!",name,len(times),len(values))
+    if len(values) == 0:
+        logging.warning('store_data: %s has empty y component, cannot create variable',name)
         return False
+
+    if len(times) != len(values):
+        # This happens for a few MMS and other data sets. Rather than quitting immediately, go ahead and create
+        # the variable, but give an informational message about the mismatch.  The fix would probably be for the
+        # data provider to mark the variable as non-record-variant, and avoid giving it a DEPEND_0 or DEPEND_TIME
+        # attribute.
+        logging.info("%s: lengths of x (%d) and y (%d) do not match! Mislabeled NRV variable?",name,len(times),len(values))
 
     times = np.array(times)
 
